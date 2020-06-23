@@ -156,6 +156,20 @@ func PushDownWindowAggregateLast() BoolFlag {
 	return pushDownWindowAggregateLast
 }
 
+var groupWindowAggregateTranspose = MakeBoolFlag(
+	"Group Window Aggregate Transpose",
+	"groupWindowAggregateTranspose",
+	"Query Team",
+	false,
+	Temporary,
+	false,
+)
+
+// GroupWindowAggregateTranspose - Enables the GroupWindowAggregateTransposeRule for all enabled window aggregates
+func GroupWindowAggregateTranspose() BoolFlag {
+	return groupWindowAggregateTranspose
+}
+
 var newAuth = MakeBoolFlag(
 	"New Auth Package",
 	"newAuth",
@@ -282,6 +296,20 @@ func UrmFreeTasks() BoolFlag {
 	return urmFreeTasks
 }
 
+var simpleTaskOptionsExtraction = MakeBoolFlag(
+	"Simple Task Options Extraction",
+	"simpleTaskOptionsExtraction",
+	"Brett Buddin",
+	false,
+	Temporary,
+	false,
+)
+
+// SimpleTaskOptionsExtraction - Simplified task options extraction to avoid undefined functions when saving tasks
+func SimpleTaskOptionsExtraction() BoolFlag {
+	return simpleTaskOptionsExtraction
+}
+
 var all = []Flag{
 	appMetrics,
 	backendExample,
@@ -294,6 +322,7 @@ var all = []Flag{
 	pushDownWindowAggregateMean,
 	pushDownWindowAggregateFirst,
 	pushDownWindowAggregateLast,
+	groupWindowAggregateTranspose,
 	newAuth,
 	pushDownGroupAggregateCount,
 	pushDownGroupAggregateSum,
@@ -303,27 +332,30 @@ var all = []Flag{
 	hydratevars,
 	memoryOptimizedFill,
 	urmFreeTasks,
+	simpleTaskOptionsExtraction,
 }
 
 var byKey = map[string]Flag{
-	"appMetrics":                   appMetrics,
-	"backendExample":               backendExample,
-	"communityTemplates":           communityTemplates,
-	"frontendExample":              frontendExample,
-	"pushDownWindowAggregateCount": pushDownWindowAggregateCount,
-	"pushDownWindowAggregateSum":   pushDownWindowAggregateSum,
-	"pushDownWindowAggregateMin":   pushDownWindowAggregateMin,
-	"pushDownWindowAggregateMax":   pushDownWindowAggregateMax,
-	"pushDownWindowAggregateMean":  pushDownWindowAggregateMean,
-	"pushDownWindowAggregateFirst": pushDownWindowAggregateFirst,
-	"pushDownWindowAggregateLast":  pushDownWindowAggregateLast,
-	"newAuth":                      newAuth,
-	"pushDownGroupAggregateCount":  pushDownGroupAggregateCount,
-	"pushDownGroupAggregateSum":    pushDownGroupAggregateSum,
-	"pushDownGroupAggregateFirst":  pushDownGroupAggregateFirst,
-	"pushDownGroupAggregateLast":   pushDownGroupAggregateLast,
-	"newLabels":                    newLabels,
-	"hydratevars":                  hydratevars,
-	"memoryOptimizedFill":          memoryOptimizedFill,
-	"urmFreeTasks":                 urmFreeTasks,
+	"appMetrics":                    appMetrics,
+	"backendExample":                backendExample,
+	"communityTemplates":            communityTemplates,
+	"frontendExample":               frontendExample,
+	"pushDownWindowAggregateCount":  pushDownWindowAggregateCount,
+	"pushDownWindowAggregateSum":    pushDownWindowAggregateSum,
+	"pushDownWindowAggregateMin":    pushDownWindowAggregateMin,
+	"pushDownWindowAggregateMax":    pushDownWindowAggregateMax,
+	"pushDownWindowAggregateMean":   pushDownWindowAggregateMean,
+	"pushDownWindowAggregateFirst":  pushDownWindowAggregateFirst,
+	"pushDownWindowAggregateLast":   pushDownWindowAggregateLast,
+	"groupWindowAggregateTranspose": groupWindowAggregateTranspose,
+	"newAuth":                       newAuth,
+	"pushDownGroupAggregateCount":   pushDownGroupAggregateCount,
+	"pushDownGroupAggregateSum":     pushDownGroupAggregateSum,
+	"pushDownGroupAggregateFirst":   pushDownGroupAggregateFirst,
+	"pushDownGroupAggregateLast":    pushDownGroupAggregateLast,
+	"newLabels":                     newLabels,
+	"hydratevars":                   hydratevars,
+	"memoryOptimizedFill":           memoryOptimizedFill,
+	"urmFreeTasks":                  urmFreeTasks,
+	"simpleTaskOptionsExtraction":   simpleTaskOptionsExtraction,
 }

@@ -968,7 +968,7 @@ func (b *cmdPkgBuilder) registerPkgFileFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&b.recurse, "recurse", "R", false, "Process the directory used in -f, --file recursively. Useful when you want to manage related templates organized within the same directory.")
 
 	cmd.Flags().StringSliceVarP(&b.urls, "template-url", "u", nil, "URL to template file")
-	cmd.Flags().MarkHidden("template-url")
+	cmd.Flags().MarkDeprecated("template-url", "use the --file flag; example: influx apply --file $URL_TO_TEMPLATE")
 
 	cmd.Flags().StringVarP(&b.encoding, "encoding", "e", "", "Encoding for the input stream. If a file is provided will gather encoding type from file extension. If extension provided will override.")
 	cmd.MarkFlagFilename("encoding", "yaml", "yml", "json", "jsonnet")
@@ -1461,6 +1461,9 @@ func (b *cmdPkgBuilder) printPkgDiff(diff pkger.Diff) error {
 		appendValues := func(id pkger.SafeID, pkgName string, v pkger.DiffTaskValues) []string {
 			timing := v.Cron
 			if v.Cron == "" {
+				if v.Offset == "" {
+					v.Offset = time.Duration(0).String()
+				}
 				timing = fmt.Sprintf("every: %s offset: %s", v.Every, v.Offset)
 			}
 			return []string{pkgName, id.String(), v.Name, v.Description, timing}
