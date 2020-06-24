@@ -9,7 +9,7 @@ import {SlideToggle, InputLabel} from '@influxdata/clockface'
 import {setNotebookMiniMapState} from 'src/shared/actions/app'
 
 // Utils
-import {event} from 'src/notebooks/shared/event'
+import {event} from 'src/cloud/utils/reporting'
 
 // Types
 import {AppState, NotebookMiniMapState} from 'src/types'

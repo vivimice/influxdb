@@ -8,7 +8,7 @@ import {TimeContext} from 'src/notebooks/context/time'
 import {IconFont} from '@influxdata/clockface'
 
 // Utils
-import {event} from 'src/notebooks/shared/event'
+import {event} from 'src/cloud/utils/reporting'
 
 // Types
 import {RemoteDataState} from 'src/types'

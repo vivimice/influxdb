@@ -32,11 +32,7 @@ import {
   isDemoDataAvailabilityError,
   demoDataError,
 } from 'src/cloud/utils/demoDataErrors'
-import {
-  reportSimpleQueryPerformanceDuration,
-  reportQueryPerformanceEvent,
-  toNano,
-} from 'src/cloud/utils/reporting'
+import {event} from 'src/cloud/utils/reporting'
 
 // Types
 import {CancelBox} from 'src/types/promises'
@@ -52,7 +48,6 @@ import {
 // Selectors
 import {getOrg} from 'src/organizations/selectors'
 import {getAll} from 'src/resources/selectors/index'
-import {fireQueryEvent} from 'src/shared/utils/analytics'
 
 export type Action = SaveDraftQueriesAction | SetQueryResults
 
@@ -150,14 +145,14 @@ export const executeQueries = (abortController?: AbortController) => async (
     pendingResults.forEach(({cancel}) => cancel())
 
     pendingResults = queries.map(({text}) => {
-      reportQueryPerformanceEvent({
-        timestamp: toNano(Date.now()),
-        fields: {query: text},
-        tags: {event: 'executeQueries query'},
-      })
+      event('executeQueries query', {}, {query: text})
       const orgID = getOrgIDFromBuckets(text, allBuckets) || getOrg(state).id
 
-      fireQueryEvent(getOrg(state).id, orgID)
+      if (getOrg(state).id === orgID) {
+        event('orgData_queried')
+      } else {
+        event('demoData_queried')
+      }
 
       const extern = buildVarsOption(variableAssignments)
 
@@ -167,11 +162,7 @@ export const executeQueries = (abortController?: AbortController) => async (
 
     const duration = window.performance.now() - startTime
 
-    reportSimpleQueryPerformanceDuration(
-      'executeQueries querying',
-      startDate,
-      duration
-    )
+    event('executeQueries querying', {time: startDate, duration})
 
     let statuses = [[]] as StatusRow[][]
     const {
@@ -218,11 +209,10 @@ export const executeQueries = (abortController?: AbortController) => async (
       setQueryResults(RemoteDataState.Done, files, duration, null, statuses)
     )
 
-    reportSimpleQueryPerformanceDuration(
-      'executeQueries function',
-      executeQueriesStartTime,
-      Date.now() - executeQueriesStartTime
-    )
+    event('executeQueries function', {
+      time: executeQueriesStartTime,
+      duration: Date.now() - executeQueriesStartTime,
+    })
 
     return results
   } catch (error) {

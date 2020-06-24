@@ -8,7 +8,7 @@ import {
   PointFields,
 } from 'src/cloud/apis/reporting'
 
-import {fireEvent} from 'src/shared/utils/analytics'
+import {isFlagEnabled} from 'src/shared/utils/featureFlag'
 
 export {Point, PointTags, PointFields} from 'src/cloud/apis/reporting'
 
@@ -27,21 +27,14 @@ export const updateReportingContext = (key: string, value: string) => {
   reportingTags = {...reportingTags, [key]: value}
 }
 
-export const reportEvent = ({
-  timestamp = toNano(Date.now()),
-  measurement,
-  fields,
-  tags,
-}: Point) => {
+const pooledEvent = ({timestamp, measurement, fields, tags}: Point) => {
   if (isEmpty(fields)) {
     fields = {source: 'ui'}
   }
 
-  fireEvent(measurement, {...reportingTags, ...tags})
-
   reportingPoints.push({
-    measurement,
-    tags: {...reportingTags, ...tags},
+    measurement: 'UI Event', // artifact of sharing the tools cluster
+    tags: {...reportingTags, ...tags, event: measurement},
     fields,
     timestamp,
   })
@@ -95,45 +88,58 @@ export const reportEvent = ({
   }, REPORT_DECAY)
 }
 
-export const reportQueryPerformanceEvent = ({
-  timestamp,
-  fields,
-  tags,
-}: {
-  timestamp: number
-  fields: PointFields
-  tags: PointTags
-}) => {
-  reportEvent({timestamp, measurement: 'UIQueryPerformance', fields, tags})
-}
-
-export const reportSimpleQueryPerformanceEvent = (event: string) => {
-  reportQueryPerformanceEvent({
-    timestamp: toNano(Date.now()),
-    fields: {},
-    tags: {event},
+export const gaEvent = (event: string, payload: object = {}) => {
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({
+    event,
+    ...payload,
   })
 }
 
-export const reportSimpleQueryPerformanceDuration = (
-  event: string,
-  startTime: number,
-  duration: number
-) => {
-  reportQueryPerformanceEvent({
-    timestamp: toNano(startTime),
-    fields: {duration},
-    tags: {event},
+export const event = (
+  title: string,
+  meta: PointTags = {},
+  values: PointFields = {}
+): void => {
+  let time = meta.time ? new Date(meta.time).valueOf() : Date.now()
+
+  if (isNaN(time)) {
+    time = Date.now()
+  }
+
+  delete meta.time
+
+  if (isFlagEnabled('streamEvents')) {
+    /* eslint-disable no-console */
+    console.log(`Event:  [ ${title} ]`)
+    if (Object.keys(meta).length) {
+      console.log(
+        Object.entries(meta)
+          .map(([k, v]) => `        ${k}: ${v}`)
+          .join('\n')
+      )
+    }
+    /* eslint-enable no-console */
+  }
+
+  gaEvent(title, {...values, ...meta})
+
+  pooledEvent({
+    timestamp: time,
+    measurement: title,
+    fields: {
+      source: 'ui',
+      ...values,
+    },
+    tags: {...meta},
   })
 }
 
-export const useLoadTimeReporting = (event: string) => {
+export const useLoadTimeReporting = (title: string) => {
   const [loadStartTime] = useState(toNano(Date.now()))
   useEffect(() => {
-    reportQueryPerformanceEvent({
-      timestamp: loadStartTime,
-      fields: {},
-      tags: {event},
+    event(title, {
+      time: loadStartTime,
     })
   }, [])
 }
