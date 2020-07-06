@@ -764,7 +764,6 @@ func isPushableWindow(windowSpec *universe.WindowProcedureSpec) bool {
 		window.Every.Months() == 0 &&
 		!window.Every.IsNegative() &&
 		!window.Every.IsZero() &&
-		window.Offset.IsZero() &&
 		windowSpec.TimeColumn == "_time" &&
 		windowSpec.StartColumn == "_start" &&
 		windowSpec.StopColumn == "_stop"
@@ -790,6 +789,7 @@ func (PushDownWindowAggregateRule) Rewrite(ctx context.Context, pn plan.Node) (p
 		ReadRangePhysSpec: *fromSpec.Copy().(*ReadRangePhysSpec),
 		Aggregates:        []plan.ProcedureKind{fnNode.Kind()},
 		WindowEvery:       windowSpec.Window.Every.Nanoseconds(),
+		Offset:            windowSpec.Window.Offset.Nanoseconds(),
 		CreateEmpty:       windowSpec.CreateEmpty,
 	}), true, nil
 }
