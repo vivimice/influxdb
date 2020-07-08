@@ -26,28 +26,28 @@ func newLimitArrayCursor(cur cursors.Cursor) cursors.Cursor {
 	}
 }
 
-func newWindowFirstArrayCursor(cur cursors.Cursor, every int64) cursors.Cursor {
+func newWindowFirstArrayCursor(cur cursors.Cursor, every, offset int64) cursors.Cursor {
 	if every == 0 {
 		return newLimitArrayCursor(cur)
 	}
 	switch cur := cur.(type) {
 {{range .}}{{/* every type supports first */}}
 	case cursors.{{.Name}}ArrayCursor:
-		return new{{.Name}}WindowFirstArrayCursor(cur, every)
+		return new{{.Name}}WindowFirstArrayCursor(cur, every, offset)
 {{end}}
 	default:
 		panic(fmt.Sprintf("unreachable: %T", cur))
 	}
 }
 
-func newWindowLastArrayCursor(cur cursors.Cursor, every int64) cursors.Cursor {
+func newWindowLastArrayCursor(cur cursors.Cursor, every, offset int64) cursors.Cursor {
 	if every == 0 {
 		return newLimitArrayCursor(cur)
 	}
 	switch cur := cur.(type) {
 {{range .}}{{/* every type supports last */}}
 	case cursors.{{.Name}}ArrayCursor:
-		return new{{.Name}}WindowLastArrayCursor(cur, every)
+		return new{{.Name}}WindowLastArrayCursor(cur, every, offset)
 {{end}}
 	default:
 		panic(fmt.Sprintf("unreachable: %T", cur))
@@ -258,16 +258,16 @@ func (c *{{.name}}LimitArrayCursor) Next() {{$arrayType}} {
 
 type {{.name}}WindowLastArrayCursor struct {
 	cursors.{{.Name}}ArrayCursor
-	every int64
-	windowEnd int64
+	every, offset, windowEnd int64
 	res {{$arrayType}}
 	tmp {{$arrayType}}
 }
 
-func new{{.Name}}WindowLastArrayCursor(cur cursors.{{.Name}}ArrayCursor, every int64) *{{.name}}WindowLastArrayCursor {
+func new{{.Name}}WindowLastArrayCursor(cur cursors.{{.Name}}ArrayCursor, every, offset int64) *{{.name}}WindowLastArrayCursor {
 	return &{{.name}}WindowLastArrayCursor{
 		{{.Name}}ArrayCursor: cur,
 		every: every,
+		offset: offset,
 		windowEnd: math.MinInt64,
 		res: cursors.New{{.Name}}ArrayLen(MaxPointsPerBlock),
 		tmp: &cursors.{{.Name}}Array{},
@@ -283,6 +283,8 @@ func (c *{{.name}}WindowLastArrayCursor) Next() *cursors.{{.Name}}Array {
 	if every == 0 {
 		every = math.MaxInt64
 	}
+
+	offset := Modulo(c.offset, every)
 
 	cur := -1
 
@@ -315,7 +317,13 @@ NEXT:
 		c.res.Timestamps[cur] = t
 		c.res.Values[cur] = a.Values[i]
 
-		c.windowEnd = t - t % every + every
+		r := Modulo(t, every)
+
+		if r < offset {
+			c.windowEnd = t - r + offset
+		} else {
+			c.windowEnd = t - r + every + offset
+		}
 	}
 
 	c.tmp.Timestamps = nil
@@ -326,16 +334,16 @@ NEXT:
 
 type {{.name}}WindowFirstArrayCursor struct {
 	cursors.{{.Name}}ArrayCursor
-	every int64
-	windowEnd int64
+	every, offset, windowEnd int64
 	res {{$arrayType}}
 	tmp {{$arrayType}}
 }
 
-func new{{.Name}}WindowFirstArrayCursor(cur cursors.{{.Name}}ArrayCursor, every int64) *{{.name}}WindowFirstArrayCursor {
+func new{{.Name}}WindowFirstArrayCursor(cur cursors.{{.Name}}ArrayCursor, every, offset int64) *{{.name}}WindowFirstArrayCursor {
 	return &{{.name}}WindowFirstArrayCursor{
 		{{.Name}}ArrayCursor: cur,
 		every: every,
+		offset: offset,
 		windowEnd: math.MinInt64,
 		res: cursors.New{{.Name}}ArrayLen(MaxPointsPerBlock),
 		tmp: &cursors.{{.Name}}Array{},
@@ -355,6 +363,8 @@ func (c *{{.name}}WindowFirstArrayCursor) Next() *cursors.{{.Name}}Array {
 		every = math.MaxInt64
 	}
 
+	offset := Modulo(c.offset, every)
+
 NEXT:
 	var a *cursors.{{.Name}}Array
 
@@ -373,7 +383,13 @@ NEXT:
 			continue
 		}
 
-		c.windowEnd = t - t % every + every
+		r := Modulo(t, every)
+
+		if r < offset {
+			c.windowEnd = t - r + offset
+		} else {
+			c.windowEnd = t - r + every + offset
+		}
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])

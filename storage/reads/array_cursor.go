@@ -21,10 +21,10 @@ func newAggregateArrayCursor(ctx context.Context, agg *datatypes.Aggregate, curs
 	case datatypes.AggregateTypeFirst, datatypes.AggregateTypeLast:
 		return newLimitArrayCursor(cursor)
 	}
-	return newWindowAggregateArrayCursor(ctx, agg, 0, cursor)
+	return newWindowAggregateArrayCursor(ctx, agg, 0, 0, cursor)
 }
 
-func newWindowAggregateArrayCursor(ctx context.Context, agg *datatypes.Aggregate, every int64, cursor cursors.Cursor) cursors.Cursor {
+func newWindowAggregateArrayCursor(ctx context.Context, agg *datatypes.Aggregate, every, offset int64, cursor cursors.Cursor) cursors.Cursor {
 	if cursor == nil {
 		return nil
 	}
@@ -35,9 +35,9 @@ func newWindowAggregateArrayCursor(ctx context.Context, agg *datatypes.Aggregate
 	case datatypes.AggregateTypeSum:
 		return newWindowSumArrayCursor(cursor, every)
 	case datatypes.AggregateTypeFirst:
-		return newWindowFirstArrayCursor(cursor, every)
+		return newWindowFirstArrayCursor(cursor, every, offset)
 	case datatypes.AggregateTypeLast:
-		return newWindowLastArrayCursor(cursor, every)
+		return newWindowLastArrayCursor(cursor, every, offset)
 	default:
 		// TODO(sgc): should be validated higher up
 		panic("invalid aggregate")

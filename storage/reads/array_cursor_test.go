@@ -409,7 +409,10 @@ func TestWindowFirstArrayCursor(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		tc.createCursorFn = func(cur cursors.IntegerArrayCursor, every int64) cursors.IntegerArrayCursor {
-			return newIntegerWindowFirstArrayCursor(cur, every)
+			if every == 0 {
+				return newIntegerLimitArrayCursor(cur)
+			}
+			return newIntegerWindowFirstArrayCursor(cur, every, 0)
 		}
 		tc.run(t)
 	}
@@ -717,7 +720,7 @@ func TestWindowLastArrayCursor(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		tc.createCursorFn = func(cur cursors.IntegerArrayCursor, every int64) cursors.IntegerArrayCursor {
-			return newIntegerWindowLastArrayCursor(cur, every)
+			return newIntegerWindowLastArrayCursor(cur, every, 0)
 		}
 		tc.run(t)
 	}

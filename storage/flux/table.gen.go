@@ -136,7 +136,7 @@ func newFloatWindowTable(
 	}
 	if t.createEmpty {
 		start := int64(bounds.Start)
-		t.nextTS = start + (every - offset(start, every))
+		t.nextTS = start + (every - storage.Modulo(start, every))
 	}
 	t.readTags(tags)
 	t.init(t.advance)
@@ -380,7 +380,7 @@ func (t *floatWindowSelectorTable) startTimes(arr *cursors.FloatArray) *array.In
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - offset(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -396,7 +396,7 @@ func (t *floatWindowSelectorTable) stopTimes(arr *cursors.FloatArray) *array.Int
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - offset(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -434,7 +434,7 @@ func newFloatEmptyWindowSelectorTable(
 ) *floatEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - offset(rangeStart, windowEvery)
+	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
 	windowStop := windowStart + windowEvery
 
 	t := &floatEmptyWindowSelectorTable{
@@ -886,7 +886,7 @@ func newIntegerWindowTable(
 	}
 	if t.createEmpty {
 		start := int64(bounds.Start)
-		t.nextTS = start + (every - offset(start, every))
+		t.nextTS = start + (every - storage.Modulo(start, every))
 	}
 	t.readTags(tags)
 	t.init(t.advance)
@@ -1130,7 +1130,7 @@ func (t *integerWindowSelectorTable) startTimes(arr *cursors.IntegerArray) *arra
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - offset(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -1146,7 +1146,7 @@ func (t *integerWindowSelectorTable) stopTimes(arr *cursors.IntegerArray) *array
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - offset(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -1184,7 +1184,7 @@ func newIntegerEmptyWindowSelectorTable(
 ) *integerEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - offset(rangeStart, windowEvery)
+	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
 	windowStop := windowStart + windowEvery
 
 	t := &integerEmptyWindowSelectorTable{
@@ -1634,7 +1634,7 @@ func newUnsignedWindowTable(
 	}
 	if t.createEmpty {
 		start := int64(bounds.Start)
-		t.nextTS = start + (every - offset(start, every))
+		t.nextTS = start + (every - storage.Modulo(start, every))
 	}
 	t.readTags(tags)
 	t.init(t.advance)
@@ -1878,7 +1878,7 @@ func (t *unsignedWindowSelectorTable) startTimes(arr *cursors.UnsignedArray) *ar
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - offset(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -1894,7 +1894,7 @@ func (t *unsignedWindowSelectorTable) stopTimes(arr *cursors.UnsignedArray) *arr
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - offset(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -1932,7 +1932,7 @@ func newUnsignedEmptyWindowSelectorTable(
 ) *unsignedEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - offset(rangeStart, windowEvery)
+	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
 	windowStop := windowStart + windowEvery
 
 	t := &unsignedEmptyWindowSelectorTable{
@@ -2382,7 +2382,7 @@ func newStringWindowTable(
 	}
 	if t.createEmpty {
 		start := int64(bounds.Start)
-		t.nextTS = start + (every - offset(start, every))
+		t.nextTS = start + (every - storage.Modulo(start, every))
 	}
 	t.readTags(tags)
 	t.init(t.advance)
@@ -2626,7 +2626,7 @@ func (t *stringWindowSelectorTable) startTimes(arr *cursors.StringArray) *array.
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - offset(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -2642,7 +2642,7 @@ func (t *stringWindowSelectorTable) stopTimes(arr *cursors.StringArray) *array.I
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - offset(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -2680,7 +2680,7 @@ func newStringEmptyWindowSelectorTable(
 ) *stringEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - offset(rangeStart, windowEvery)
+	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
 	windowStop := windowStart + windowEvery
 
 	t := &stringEmptyWindowSelectorTable{
@@ -3130,7 +3130,7 @@ func newBooleanWindowTable(
 	}
 	if t.createEmpty {
 		start := int64(bounds.Start)
-		t.nextTS = start + (every - offset(start, every))
+		t.nextTS = start + (every - storage.Modulo(start, every))
 	}
 	t.readTags(tags)
 	t.init(t.advance)
@@ -3374,7 +3374,7 @@ func (t *booleanWindowSelectorTable) startTimes(arr *cursors.BooleanArray) *arra
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - offset(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -3390,7 +3390,7 @@ func (t *booleanWindowSelectorTable) stopTimes(arr *cursors.BooleanArray) *array
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - offset(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -3428,7 +3428,7 @@ func newBooleanEmptyWindowSelectorTable(
 ) *booleanEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - offset(rangeStart, windowEvery)
+	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
 	windowStop := windowStart + windowEvery
 
 	t := &booleanEmptyWindowSelectorTable{

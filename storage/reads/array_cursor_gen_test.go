@@ -82,7 +82,7 @@ func TestNewWindowAggregateArrayCursor_Float(t *testing.T) {
 			Type: datatypes.AggregateTypeCount,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockFloatArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockFloatArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(floatWindowCountArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -101,7 +101,7 @@ func TestNewWindowAggregateArrayCursor_Float(t *testing.T) {
 			Type: datatypes.AggregateTypeSum,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockFloatArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockFloatArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(floatWindowSumArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -176,7 +176,7 @@ func TestNewWindowAggregateArrayCursor_Integer(t *testing.T) {
 			Type: datatypes.AggregateTypeCount,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockIntegerArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockIntegerArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(integerWindowCountArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -195,7 +195,7 @@ func TestNewWindowAggregateArrayCursor_Integer(t *testing.T) {
 			Type: datatypes.AggregateTypeSum,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockIntegerArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockIntegerArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(integerWindowSumArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -270,7 +270,7 @@ func TestNewWindowAggregateArrayCursor_Unsigned(t *testing.T) {
 			Type: datatypes.AggregateTypeCount,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockUnsignedArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockUnsignedArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(unsignedWindowCountArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -289,7 +289,7 @@ func TestNewWindowAggregateArrayCursor_Unsigned(t *testing.T) {
 			Type: datatypes.AggregateTypeSum,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockUnsignedArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockUnsignedArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(unsignedWindowSumArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -346,7 +346,7 @@ func TestNewWindowAggregateArrayCursor_String(t *testing.T) {
 			Type: datatypes.AggregateTypeCount,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockStringArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockStringArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(stringWindowCountArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
@@ -403,7 +403,7 @@ func TestNewWindowAggregateArrayCursor_Boolean(t *testing.T) {
 			Type: datatypes.AggregateTypeCount,
 		}
 
-		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), &MockBooleanArrayCursor{})
+		got := newWindowAggregateArrayCursor(context.Background(), agg, int64(time.Hour), 0, &MockBooleanArrayCursor{})
 
 		if diff := cmp.Diff(got, want, cmp.AllowUnexported(booleanWindowCountArrayCursor{})); diff != "" {
 			t.Fatalf("did not get expected cursor; -got/+want:\n%v", diff)
