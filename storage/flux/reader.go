@@ -592,6 +592,7 @@ func (wai *windowAggregateIterator) Do(f func(flux.Table) error) error {
 	req.Range.End = int64(wai.spec.Bounds.Stop)
 
 	req.WindowEvery = wai.spec.WindowEvery
+	req.Offset = wai.spec.Offset
 	req.Aggregate = make([]*datatypes.Aggregate, len(wai.spec.Aggregates))
 
 	for i, aggKind := range wai.spec.Aggregates {
@@ -632,6 +633,7 @@ func isSelector(kind plan.ProcedureKind) bool {
 
 func (wai *windowAggregateIterator) handleRead(f func(flux.Table) error, rs storage.ResultSet) error {
 	windowEvery := wai.spec.WindowEvery
+	offset := wai.spec.Offset
 	createEmpty := wai.spec.CreateEmpty
 
 	selector := len(wai.spec.Aggregates) > 0 && isSelector(wai.spec.Aggregates[0])
@@ -684,13 +686,13 @@ READ:
 				table = newIntegerWindowTable(done, typedCur, bnds, windowEvery, createEmpty, timeColumn, fillValue, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else if createEmpty && !hasTimeCol {
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TInt)
-				table = newIntegerEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newIntegerEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else {
 				// Note hasTimeCol == true means that aggregateWindow() was called.
 				// Because aggregateWindow() ultimately removes empty tables we
 				// don't bother creating them here.
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TInt)
-				table = newIntegerWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newIntegerWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			}
 		case cursors.FloatArrayCursor:
 			if !selector {
@@ -698,13 +700,13 @@ READ:
 				table = newFloatWindowTable(done, typedCur, bnds, windowEvery, createEmpty, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else if createEmpty && !hasTimeCol {
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TFloat)
-				table = newFloatEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newFloatEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else {
 				// Note hasTimeCol == true means that aggregateWindow() was called.
 				// Because aggregateWindow() ultimately removes empty tables we
 				// don't bother creating them here.
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TFloat)
-				table = newFloatWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newFloatWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			}
 		case cursors.UnsignedArrayCursor:
 			if !selector {
@@ -712,13 +714,13 @@ READ:
 				table = newUnsignedWindowTable(done, typedCur, bnds, windowEvery, createEmpty, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else if createEmpty && !hasTimeCol {
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TUInt)
-				table = newUnsignedEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newUnsignedEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else {
 				// Note hasTimeCol == true means that aggregateWindow() was called.
 				// Because aggregateWindow() ultimately removes empty tables we
 				// don't bother creating them here.
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TUInt)
-				table = newUnsignedWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newUnsignedWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			}
 		case cursors.BooleanArrayCursor:
 			if !selector {
@@ -726,13 +728,13 @@ READ:
 				table = newBooleanWindowTable(done, typedCur, bnds, windowEvery, createEmpty, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else if createEmpty && !hasTimeCol {
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TBool)
-				table = newBooleanEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newBooleanEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else {
 				// Note hasTimeCol == true means that aggregateWindow() was called.
 				// Because aggregateWindow() ultimately removes empty tables we
 				// don't bother creating them here.
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TBool)
-				table = newBooleanWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newBooleanWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			}
 		case cursors.StringArrayCursor:
 			if !selector {
@@ -740,13 +742,13 @@ READ:
 				table = newStringWindowTable(done, typedCur, bnds, windowEvery, createEmpty, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else if createEmpty && !hasTimeCol {
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TString)
-				table = newStringEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newStringEmptyWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			} else {
 				// Note hasTimeCol == true means that aggregateWindow() was called.
 				// Because aggregateWindow() ultimately removes empty tables we
 				// don't bother creating them here.
 				cols, defs := determineTableColsForSeries(rs.Tags(), flux.TString)
-				table = newStringWindowSelectorTable(done, typedCur, bnds, windowEvery, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
+				table = newStringWindowSelectorTable(done, typedCur, bnds, windowEvery, offset, timeColumn, key, cols, rs.Tags(), defs, wai.cache, wai.alloc)
 			}
 		default:
 			panic(fmt.Sprintf("unreachable: %T", typedCur))

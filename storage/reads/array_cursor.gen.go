@@ -433,13 +433,7 @@ NEXT:
 			continue
 		}
 
-		r := Modulo(t, every)
-
-		if r < offset {
-			c.windowEnd = t - r + offset
-		} else {
-			c.windowEnd = t - r + every + offset
-		}
+		c.windowEnd = WindowStop(t, every, offset)
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])
@@ -999,13 +993,7 @@ NEXT:
 			continue
 		}
 
-		r := Modulo(t, every)
-
-		if r < offset {
-			c.windowEnd = t - r + offset
-		} else {
-			c.windowEnd = t - r + every + offset
-		}
+		c.windowEnd = WindowStop(t, every, offset)
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])
@@ -1565,13 +1553,7 @@ NEXT:
 			continue
 		}
 
-		r := Modulo(t, every)
-
-		if r < offset {
-			c.windowEnd = t - r + offset
-		} else {
-			c.windowEnd = t - r + every + offset
-		}
+		c.windowEnd = WindowStop(t, every, offset)
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])
@@ -2131,13 +2113,7 @@ NEXT:
 			continue
 		}
 
-		r := Modulo(t, every)
-
-		if r < offset {
-			c.windowEnd = t - r + offset
-		} else {
-			c.windowEnd = t - r + every + offset
-		}
+		c.windowEnd = WindowStop(t, every, offset)
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])
@@ -2580,13 +2556,7 @@ NEXT:
 			continue
 		}
 
-		r := Modulo(t, every)
-
-		if r < offset {
-			c.windowEnd = t - r + offset
-		} else {
-			c.windowEnd = t - r + every + offset
-		}
+		c.windowEnd = WindowStop(t, every, offset)
 
 		c.res.Timestamps = append(c.res.Timestamps, t)
 		c.res.Values = append(c.res.Values, a.Values[i])

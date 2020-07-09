@@ -314,6 +314,7 @@ func (t *floatWindowTable) advance() bool {
 type floatWindowSelectorTable struct {
 	floatTable
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -322,6 +323,7 @@ func newFloatWindowSelectorTable(
 	cur cursors.FloatArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -336,6 +338,7 @@ func newFloatWindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -380,7 +383,7 @@ func (t *floatWindowSelectorTable) startTimes(arr *cursors.FloatArray) *array.In
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -396,7 +399,7 @@ func (t *floatWindowSelectorTable) stopTimes(arr *cursors.FloatArray) *array.Int
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -424,6 +427,7 @@ func newFloatEmptyWindowSelectorTable(
 	cur cursors.FloatArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -434,9 +438,6 @@ func newFloatEmptyWindowSelectorTable(
 ) *floatEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop := windowStart + windowEvery
-
 	t := &floatEmptyWindowSelectorTable{
 		floatTable: floatTable{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -445,8 +446,8 @@ func newFloatEmptyWindowSelectorTable(
 		arr:         cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}
@@ -1064,6 +1065,7 @@ func (t *integerWindowTable) advance() bool {
 type integerWindowSelectorTable struct {
 	integerTable
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -1072,6 +1074,7 @@ func newIntegerWindowSelectorTable(
 	cur cursors.IntegerArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -1086,6 +1089,7 @@ func newIntegerWindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -1130,7 +1134,7 @@ func (t *integerWindowSelectorTable) startTimes(arr *cursors.IntegerArray) *arra
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -1146,7 +1150,7 @@ func (t *integerWindowSelectorTable) stopTimes(arr *cursors.IntegerArray) *array
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -1174,6 +1178,7 @@ func newIntegerEmptyWindowSelectorTable(
 	cur cursors.IntegerArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -1184,9 +1189,6 @@ func newIntegerEmptyWindowSelectorTable(
 ) *integerEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop := windowStart + windowEvery
-
 	t := &integerEmptyWindowSelectorTable{
 		integerTable: integerTable{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -1195,8 +1197,8 @@ func newIntegerEmptyWindowSelectorTable(
 		arr:         cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}
@@ -1812,6 +1814,7 @@ func (t *unsignedWindowTable) advance() bool {
 type unsignedWindowSelectorTable struct {
 	unsignedTable
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -1820,6 +1823,7 @@ func newUnsignedWindowSelectorTable(
 	cur cursors.UnsignedArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -1834,6 +1838,7 @@ func newUnsignedWindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -1878,7 +1883,7 @@ func (t *unsignedWindowSelectorTable) startTimes(arr *cursors.UnsignedArray) *ar
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -1894,7 +1899,7 @@ func (t *unsignedWindowSelectorTable) stopTimes(arr *cursors.UnsignedArray) *arr
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -1922,6 +1927,7 @@ func newUnsignedEmptyWindowSelectorTable(
 	cur cursors.UnsignedArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -1932,9 +1938,6 @@ func newUnsignedEmptyWindowSelectorTable(
 ) *unsignedEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop := windowStart + windowEvery
-
 	t := &unsignedEmptyWindowSelectorTable{
 		unsignedTable: unsignedTable{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -1943,8 +1946,8 @@ func newUnsignedEmptyWindowSelectorTable(
 		arr:         cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}
@@ -2560,6 +2563,7 @@ func (t *stringWindowTable) advance() bool {
 type stringWindowSelectorTable struct {
 	stringTable
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -2568,6 +2572,7 @@ func newStringWindowSelectorTable(
 	cur cursors.StringArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -2582,6 +2587,7 @@ func newStringWindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -2626,7 +2632,7 @@ func (t *stringWindowSelectorTable) startTimes(arr *cursors.StringArray) *array.
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -2642,7 +2648,7 @@ func (t *stringWindowSelectorTable) stopTimes(arr *cursors.StringArray) *array.I
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -2670,6 +2676,7 @@ func newStringEmptyWindowSelectorTable(
 	cur cursors.StringArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -2680,9 +2687,6 @@ func newStringEmptyWindowSelectorTable(
 ) *stringEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop := windowStart + windowEvery
-
 	t := &stringEmptyWindowSelectorTable{
 		stringTable: stringTable{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -2691,8 +2695,8 @@ func newStringEmptyWindowSelectorTable(
 		arr:         cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}
@@ -3308,6 +3312,7 @@ func (t *booleanWindowTable) advance() bool {
 type booleanWindowSelectorTable struct {
 	booleanTable
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -3316,6 +3321,7 @@ func newBooleanWindowSelectorTable(
 	cur cursors.BooleanArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -3330,6 +3336,7 @@ func newBooleanWindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -3374,7 +3381,7 @@ func (t *booleanWindowSelectorTable) startTimes(arr *cursors.BooleanArray) *arra
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -3390,7 +3397,7 @@ func (t *booleanWindowSelectorTable) stopTimes(arr *cursors.BooleanArray) *array
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -3418,6 +3425,7 @@ func newBooleanEmptyWindowSelectorTable(
 	cur cursors.BooleanArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -3428,9 +3436,6 @@ func newBooleanEmptyWindowSelectorTable(
 ) *booleanEmptyWindowSelectorTable {
 	rangeStart := int64(bounds.Start)
 	rangeStop := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop := windowStart + windowEvery
-
 	t := &booleanEmptyWindowSelectorTable{
 		booleanTable: booleanTable{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -3439,8 +3444,8 @@ func newBooleanEmptyWindowSelectorTable(
 		arr:         cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}

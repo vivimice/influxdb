@@ -310,6 +310,7 @@ func (t *{{.name}}WindowTable) advance() bool {
 type {{.name}}WindowSelectorTable struct {
 	{{.name}}Table
 	windowEvery int64
+	offset      int64
 	timeColumn  string
 }
 
@@ -318,6 +319,7 @@ func new{{.Name}}WindowSelectorTable(
 	cur cursors.{{.Name}}ArrayCursor,
 	bounds execute.Bounds,
 	every int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -332,6 +334,7 @@ func new{{.Name}}WindowSelectorTable(
 			cur:   cur,
 		},
 		windowEvery: every,
+		offset:      offset,
 		timeColumn:  timeColumn,
 	}
 	t.readTags(tags)
@@ -376,7 +379,7 @@ func (t *{{.name}}WindowSelectorTable) startTimes(arr *cursors.{{.Name}}Array) *
 	rangeStart := int64(t.bounds.Start)
 
 	for _, v := range arr.Timestamps {
-		if windowStart := v - storage.Modulo(v, t.windowEvery); windowStart < rangeStart {
+		if windowStart := storage.WindowStart(v, t.windowEvery, t.offset); windowStart < rangeStart {
 			start.Append(rangeStart)
 		} else {
 			start.Append(windowStart)
@@ -392,7 +395,7 @@ func (t *{{.name}}WindowSelectorTable) stopTimes(arr *cursors.{{.Name}}Array) *a
 	rangeStop := int64(t.bounds.Stop)
 
 	for _, v := range arr.Timestamps {
-		if windowStop := v - storage.Modulo(v, t.windowEvery) + t.windowEvery; windowStop > rangeStop {
+		if windowStop := storage.WindowStop(v, t.windowEvery, t.offset); windowStop > rangeStop {
 			stop.Append(rangeStop)
 		} else {
 			stop.Append(windowStop)
@@ -420,6 +423,7 @@ func new{{.Name}}EmptyWindowSelectorTable(
 	cur cursors.{{.Name}}ArrayCursor,
 	bounds execute.Bounds,
 	windowEvery int64,
+	offset int64,
 	timeColumn string,
 	key flux.GroupKey,
 	cols []flux.ColMeta,
@@ -428,11 +432,8 @@ func new{{.Name}}EmptyWindowSelectorTable(
 	cache *tagsCache,
 	alloc *memory.Allocator,
 ) *{{.name}}EmptyWindowSelectorTable {
-	rangeStart  := int64(bounds.Start)
-	rangeStop   := int64(bounds.Stop)
-	windowStart := rangeStart - storage.Modulo(rangeStart, windowEvery)
-	windowStop  := windowStart + windowEvery
-
+	rangeStart := int64(bounds.Start)
+	rangeStop  := int64(bounds.Stop)
 	t := &{{.name}}EmptyWindowSelectorTable{
 		{{.name}}Table: {{.name}}Table{
 			table: newTable(done, bounds, key, cols, defs, cache, alloc),
@@ -441,8 +442,8 @@ func new{{.Name}}EmptyWindowSelectorTable(
 		arr: cur.Next(),
 		rangeStart:  rangeStart,
 		rangeStop:   rangeStop,
-		windowStart: windowStart,
-		windowStop:  windowStop,
+		windowStart: storage.WindowStart(rangeStart, windowEvery, offset),
+		windowStop:  storage.WindowStop(rangeStart, windowEvery, offset),
 		windowEvery: windowEvery,
 		timeColumn:  timeColumn,
 	}

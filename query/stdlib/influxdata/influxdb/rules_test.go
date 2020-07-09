@@ -1421,11 +1421,6 @@ func TestPushDownWindowAggregateRule(t *testing.T) {
 	badWindow1.Window.Period = dur2m
 	simpleMinUnchanged("BadPeriod", badWindow1)
 
-	// Condition not met: offset non-zero
-	badWindow2 := window1m
-	badWindow2.Window.Offset = dur1m
-	simpleMinUnchanged("BadOffset", badWindow2)
-
 	// Condition not met: non-standard _time column
 	badWindow3 := window1m
 	badWindow3.TimeColumn = "_timmy"
@@ -2225,11 +2220,6 @@ func TestTransposeGroupToWindowAggregateRule(t *testing.T) {
 	badWindow1 := window1m
 	badWindow1.Window.Period = dur2m
 	simpleMinUnchanged("BadPeriod", badWindow1)
-
-	// Condition not met: offset non-zero
-	badWindow2 := window1m
-	badWindow2.Window.Offset = dur1m
-	simpleMinUnchanged("BadOffset", badWindow2)
 
 	// Condition not met: non-standard _time column
 	badWindow3 := window1m
