@@ -75,6 +75,7 @@ func NotificationEndpointService(
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.fn(init, t)
 		})
 	}
@@ -2163,6 +2164,7 @@ func influxErrsEqual(t *testing.T, expected *influxdb.Error, actual error) {
 
 	if expected == nil {
 		require.NoError(t, actual)
+		return
 	}
 	iErr, ok := actual.(*influxdb.Error)
 	require.True(t, ok)

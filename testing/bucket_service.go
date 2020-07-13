@@ -3,7 +3,6 @@ package testing
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -116,6 +115,7 @@ func BucketService(
 			continue
 		}
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.fn(init, t)
 		})
 	}
@@ -266,7 +266,7 @@ func CreateBucket(
 				err: &influxdb.Error{
 					Code: influxdb.EConflict,
 					Op:   influxdb.OpCreateBucket,
-					Msg:  fmt.Sprintf("bucket with name bucket1 already exists"),
+					Msg:  "bucket with name bucket1 already exists",
 				},
 			},
 		},
@@ -434,7 +434,7 @@ func IDUnique(
 				},
 				err: &influxdb.Error{
 					Code: influxdb.EInternal,
-					Msg:  fmt.Sprintf("unable to generate valid id"),
+					Msg:  "unable to generate valid id",
 				},
 			},
 		},
@@ -474,7 +474,7 @@ func IDUnique(
 				},
 				err: &influxdb.Error{
 					Code: influxdb.EInternal,
-					Msg:  fmt.Sprintf("unable to generate valid id"),
+					Msg:  "unable to generate valid id",
 				},
 			},
 		},

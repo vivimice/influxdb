@@ -252,7 +252,6 @@ export const timeMachineReducer = (
     case 'SET_ACTIVE_QUERY_TEXT': {
       const {text} = action.payload
       const draftQueries = [...state.draftQueries]
-
       draftQueries[state.activeQueryIndex] = {
         ...draftQueries[state.activeQueryIndex],
         text,
@@ -555,6 +554,12 @@ export const timeMachineReducer = (
       const {shadeBelow} = action.payload
 
       return setViewProperties(state, {shadeBelow})
+    }
+
+    case 'SET_HOVER_DIMENSION': {
+      const {hoverDimension} = action.payload
+
+      return setViewProperties(state, {hoverDimension})
     }
 
     case 'SET_BACKGROUND_THRESHOLD_COLORING': {

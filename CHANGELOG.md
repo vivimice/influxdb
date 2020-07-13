@@ -1,4 +1,32 @@
-## v2.0.0-beta.13 [unreleased]
+## v2.0.0-beta.15 [unreleased]
+
+### Features
+
+1. [18888](https://github.com/influxdata/influxdb/pull/18888): Add event source to influx stack operations
+1. [18910](https://github.com/influxdata/influxdb/pull/18910): Add uninstall functionality for stacks
+1. [18912](https://github.com/influxdata/influxdb/pull/18912): Drop deprecated influx pkg command tree
+
+### Bug Fixes
+
+1. [18891](https://github.com/influxdata/influxdb/pull/18891): Allow 0 to be the custom set minimum value for Y Domain
+
+## v2.0.0-beta.14 [2020-07-08]
+
+### Features
+
+1. [18758](https://github.com/influxdata/influxdb/pull/18758): Extend influx stacks update cmd with ability to add resources without apply template
+1. [18793](https://github.com/influxdata/influxdb/pull/18793): Normalize InfluxDB templates under new /api/v2/templates and /api/v2/stacks public API
+1. [18818](https://github.com/influxdata/influxdb/pull/18818): Extend template Summary and Diff nested types with kind identifiers
+1. [18857](https://github.com/influxdata/influxdb/pull/18857): Flux updated to v0.71.1
+1. [18805](https://github.com/influxdata/influxdb/pull/18805): Added static builds for Linux
+
+### Bug Fixes
+
+1. [18878](https://github.com/influxdata/influxdb/pull/18878): Don't overwrite build date set via ldflags
+1. [18842](https://github.com/influxdata/influxdb/pull/18842): Fixed an issue where define query was unusable after importing a Check
+1. [18845](https://github.com/influxdata/influxdb/pull/18845): Update documentation links
+
+## v2.0.0-beta.13 [2020-06-25]
 
 ### Features
 
@@ -22,8 +50,11 @@
 1. [18602](https://github.com/influxdata/influxdb/pull/18602): Fix uint overflow during setup on 32bit systems
 1. [18623](https://github.com/influxdata/influxdb/pull/18623): Drop support for --local flag within influx CLI
 1. [18632](https://github.com/influxdata/influxdb/pull/18632): Prevents undefined queries in cells from erroring out in dashboards
-1. [18658](https://github.com/influxdata/influxdb/pull/18658): Add support for 'd' day time identifier in the CLI for bucket and setup commands
+1. [18649](https://github.com/influxdata/influxdb/pull/18649): Fixes bucket selection issue and query builder state
+1. [18658](https://github.com/influxdata/influxdb/pull/18658): Add support for 'd' day and 'w' week time identifiers in the CLI for bucket and setup commands
 1. [18581](https://github.com/influxdata/influxdb/pull/18581): Cache dashboard cell query results to use as a reference for cell configurations
+1. [18707](https://github.com/influxdata/influxdb/pull/18707): Validate host-url for influx config create/set commands
+1. [18713](https://github.com/influxdata/influxdb/pull/18713): Fix influx CLI flags to accurately depict flags for all commands
 
 ## v2.0.0-beta.12 [2020-06-12]
 

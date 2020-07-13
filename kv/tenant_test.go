@@ -17,12 +17,14 @@ func TestBoltTenantService(t *testing.T) {
 	itesting.TenantService(t, initBoltTenantService)
 }
 
+//lint:ignore U1000 erroneously flagged by staticcheck since it is used in skipped tests
 func initBoltTenantService(t *testing.T, f itesting.TenantFields) (influxdb.TenantService, func()) {
 	s, closeStore, err := NewTestBoltStore(t)
 	if err != nil {
 		t.Fatalf("failed to create new bolt kv store: %v", err)
 	}
 
+	ctx := context.Background()
 	svc := kv.NewService(zaptest.NewLogger(t), s)
 
 	// Create a mapping from user-specified IDs to kv generated ones.
@@ -31,10 +33,6 @@ func initBoltTenantService(t *testing.T, f itesting.TenantFields) (influxdb.Tena
 	oIDs := make(map[influxdb.ID]influxdb.ID, len(f.Organizations))
 	bIDs := make(map[influxdb.ID]influxdb.ID, len(f.Buckets))
 
-	ctx := context.Background()
-	if err := svc.Initialize(ctx); err != nil {
-		t.Fatalf("error initializing authorization service: %v", err)
-	}
 	for _, u := range f.Users {
 		id := u.ID
 		if err := svc.CreateUser(ctx, u); err != nil {

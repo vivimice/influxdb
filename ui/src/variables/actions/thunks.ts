@@ -55,6 +55,7 @@ import {
   Action as VariableAction,
   EditorAction,
 } from 'src/variables/actions/creators'
+import {RouterAction} from 'connected-react-router'
 
 type Action = VariableAction | EditorAction | NotifyAction
 
@@ -126,13 +127,7 @@ export const hydrateVariables = (skipCache?: boolean) => async (
 ) => {
   const state = getState()
   const org = getOrg(state)
-  const vars = getVariablesFromState(state).filter(
-    v => v.status && v.status !== RemoteDataState.Done
-  )
-
-  if (!vars.length) {
-    return
-  }
+  const vars = getVariablesFromState(state)
 
   const hydration = hydrateVars(vars, getAllVariablesFromState(state), {
     orgID: org.id,
@@ -428,7 +423,9 @@ export const removeVariableLabelAsync = (
 }
 
 export const selectValue = (variableID: string, selected: string) => async (
-  dispatch: Dispatch<Action | ReturnType<typeof hydrateVariables>>,
+  dispatch: Dispatch<
+    Action | ReturnType<typeof hydrateVariables> | RouterAction
+  >,
   getState: GetState
 ) => {
   const state = getState()

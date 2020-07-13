@@ -13,8 +13,6 @@ import (
 
 	"github.com/influxdata/httprouter"
 	"github.com/influxdata/influxdb/v2"
-	platform "github.com/influxdata/influxdb/v2"
-	"github.com/influxdata/influxdb/v2/inmem"
 	kithttp "github.com/influxdata/influxdb/v2/kit/transport/http"
 	"github.com/influxdata/influxdb/v2/kv"
 	"github.com/influxdata/influxdb/v2/mock"
@@ -40,8 +38,8 @@ func NewMockBucketBackend(t *testing.T) *BucketBackend {
 
 func TestService_handleGetBuckets(t *testing.T) {
 	type fields struct {
-		BucketService platform.BucketService
-		LabelService  platform.LabelService
+		BucketService influxdb.BucketService
+		LabelService  influxdb.LabelService
 	}
 	type args struct {
 		queryParams map[string][]string
@@ -62,8 +60,8 @@ func TestService_handleGetBuckets(t *testing.T) {
 			name: "get all buckets",
 			fields: fields{
 				&mock.BucketService{
-					FindBucketsFn: func(ctx context.Context, filter platform.BucketFilter, opts ...platform.FindOptions) ([]*platform.Bucket, int, error) {
-						return []*platform.Bucket{
+					FindBucketsFn: func(ctx context.Context, filter influxdb.BucketFilter, opts ...influxdb.FindOptions) ([]*influxdb.Bucket, int, error) {
+						return []*influxdb.Bucket{
 							{
 								ID:              platformtesting.MustIDBase16("0b501e7e557ab1ed"),
 								Name:            "hello",
@@ -80,8 +78,8 @@ func TestService_handleGetBuckets(t *testing.T) {
 					},
 				},
 				&mock.LabelService{
-					FindResourceLabelsFn: func(ctx context.Context, f platform.LabelMappingFilter) ([]*platform.Label, error) {
-						labels := []*platform.Label{
+					FindResourceLabelsFn: func(ctx context.Context, f influxdb.LabelMappingFilter) ([]*influxdb.Label, error) {
+						labels := []*influxdb.Label{
 							{
 								ID:   platformtesting.MustIDBase16("fc3dc670a4be9b9a"),
 								Name: "label",
@@ -172,8 +170,8 @@ func TestService_handleGetBuckets(t *testing.T) {
 			name: "get all buckets when there are none",
 			fields: fields{
 				&mock.BucketService{
-					FindBucketsFn: func(ctx context.Context, filter platform.BucketFilter, opts ...platform.FindOptions) ([]*platform.Bucket, int, error) {
-						return []*platform.Bucket{}, 0, nil
+					FindBucketsFn: func(ctx context.Context, filter influxdb.BucketFilter, opts ...influxdb.FindOptions) ([]*influxdb.Bucket, int, error) {
+						return []*influxdb.Bucket{}, 0, nil
 					},
 				},
 				&mock.LabelService{},
@@ -237,7 +235,7 @@ func TestService_handleGetBuckets(t *testing.T) {
 
 func TestService_handleGetBucket(t *testing.T) {
 	type fields struct {
-		BucketService platform.BucketService
+		BucketService influxdb.BucketService
 	}
 	type args struct {
 		id string
@@ -258,9 +256,9 @@ func TestService_handleGetBucket(t *testing.T) {
 			name: "get a bucket by id",
 			fields: fields{
 				&mock.BucketService{
-					FindBucketByIDFn: func(ctx context.Context, id platform.ID) (*platform.Bucket, error) {
+					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							return &platform.Bucket{
+							return &influxdb.Bucket{
 								ID:              platformtesting.MustIDBase16("020f755c3c082000"),
 								OrgID:           platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:            "hello",
@@ -305,9 +303,9 @@ func TestService_handleGetBucket(t *testing.T) {
 			name: "not found",
 			fields: fields{
 				&mock.BucketService{
-					FindBucketByIDFn: func(ctx context.Context, id platform.ID) (*platform.Bucket, error) {
-						return nil, &platform.Error{
-							Code: platform.ENotFound,
+					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
+						return nil, &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
@@ -369,11 +367,11 @@ func TestService_handleGetBucket(t *testing.T) {
 
 func TestService_handlePostBucket(t *testing.T) {
 	type fields struct {
-		BucketService       platform.BucketService
-		OrganizationService platform.OrganizationService
+		BucketService       influxdb.BucketService
+		OrganizationService influxdb.OrganizationService
 	}
 	type args struct {
-		bucket *platform.Bucket
+		bucket *influxdb.Bucket
 	}
 	type wants struct {
 		statusCode  int
@@ -391,19 +389,19 @@ func TestService_handlePostBucket(t *testing.T) {
 			name: "create a new bucket",
 			fields: fields{
 				BucketService: &mock.BucketService{
-					CreateBucketFn: func(ctx context.Context, c *platform.Bucket) error {
+					CreateBucketFn: func(ctx context.Context, c *influxdb.Bucket) error {
 						c.ID = platformtesting.MustIDBase16("020f755c3c082000")
 						return nil
 					},
 				},
 				OrganizationService: &mock.OrganizationService{
-					FindOrganizationF: func(ctx context.Context, f platform.OrganizationFilter) (*platform.Organization, error) {
-						return &platform.Organization{ID: platformtesting.MustIDBase16("6f626f7274697320")}, nil
+					FindOrganizationF: func(ctx context.Context, f influxdb.OrganizationFilter) (*influxdb.Organization, error) {
+						return &influxdb.Organization{ID: platformtesting.MustIDBase16("6f626f7274697320")}, nil
 					},
 				},
 			},
 			args: args{
-				bucket: &platform.Bucket{
+				bucket: &influxdb.Bucket{
 					Name:  "hello",
 					OrgID: platformtesting.MustIDBase16("6f626f7274697320"),
 				},
@@ -438,25 +436,53 @@ func TestService_handlePostBucket(t *testing.T) {
 			name: "create a new bucket with invalid name",
 			fields: fields{
 				BucketService: &mock.BucketService{
-					CreateBucketFn: func(ctx context.Context, c *platform.Bucket) error {
+					CreateBucketFn: func(ctx context.Context, c *influxdb.Bucket) error {
 						c.ID = platformtesting.MustIDBase16("020f755c3c082000")
 						return nil
 					},
 				},
 				OrganizationService: &mock.OrganizationService{
-					FindOrganizationF: func(ctx context.Context, f platform.OrganizationFilter) (*platform.Organization, error) {
-						return &platform.Organization{ID: platformtesting.MustIDBase16("6f626f7274697320")}, nil
+					FindOrganizationF: func(ctx context.Context, f influxdb.OrganizationFilter) (*influxdb.Organization, error) {
+						return &influxdb.Organization{ID: platformtesting.MustIDBase16("6f626f7274697320")}, nil
 					},
 				},
 			},
 			args: args{
-				bucket: &platform.Bucket{
+				bucket: &influxdb.Bucket{
 					Name:  "_hello",
 					OrgID: platformtesting.MustIDBase16("6f626f7274697320"),
 				},
 			},
 			wants: wants{
 				statusCode: http.StatusUnprocessableEntity,
+			},
+		},
+		{
+			name: "create a new bucket without orgId",
+			fields: fields{
+				BucketService: &mock.BucketService{
+					CreateBucketFn: func(ctx context.Context, c *influxdb.Bucket) error {
+						c.ID = platformtesting.MustIDBase16("020f755c3c082000")
+						return nil
+					},
+				},
+				OrganizationService: &mock.OrganizationService{
+					FindOrganizationF: func(ctx context.Context, f influxdb.OrganizationFilter) (*influxdb.Organization, error) {
+						return &influxdb.Organization{ID: platformtesting.MustIDBase16("6f626f7274697320")}, nil
+					},
+				},
+			},
+			args: args{
+				bucket: &influxdb.Bucket{
+					Name: "hello",
+				},
+			},
+			wants: wants{
+				statusCode: http.StatusBadRequest,
+				body: `{
+	"code": "invalid",
+	"message": "organization id must be provided"
+}`,
 			},
 		},
 	}
@@ -502,7 +528,7 @@ func TestService_handlePostBucket(t *testing.T) {
 
 func TestService_handleDeleteBucket(t *testing.T) {
 	type fields struct {
-		BucketService platform.BucketService
+		BucketService influxdb.BucketService
 	}
 	type args struct {
 		id string
@@ -523,7 +549,7 @@ func TestService_handleDeleteBucket(t *testing.T) {
 			name: "remove a bucket by id",
 			fields: fields{
 				&mock.BucketService{
-					DeleteBucketFn: func(ctx context.Context, id platform.ID) error {
+					DeleteBucketFn: func(ctx context.Context, id influxdb.ID) error {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
 							return nil
 						}
@@ -543,9 +569,9 @@ func TestService_handleDeleteBucket(t *testing.T) {
 			name: "bucket not found",
 			fields: fields{
 				&mock.BucketService{
-					DeleteBucketFn: func(ctx context.Context, id platform.ID) error {
-						return &platform.Error{
-							Code: platform.ENotFound,
+					DeleteBucketFn: func(ctx context.Context, id influxdb.ID) error {
+						return &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
@@ -606,7 +632,7 @@ func TestService_handleDeleteBucket(t *testing.T) {
 
 func TestService_handlePatchBucket(t *testing.T) {
 	type fields struct {
-		BucketService platform.BucketService
+		BucketService influxdb.BucketService
 	}
 	type args struct {
 		id        string
@@ -630,15 +656,15 @@ func TestService_handlePatchBucket(t *testing.T) {
 			fields: fields{
 				&mock.BucketService{
 					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
-						return &platform.Bucket{
+						return &influxdb.Bucket{
 							ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 							Name:  "hello",
 							OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
 						}, nil
 					},
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							d := &platform.Bucket{
+							d := &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -696,7 +722,7 @@ func TestService_handlePatchBucket(t *testing.T) {
 				&mock.BucketService{
 					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							return &platform.Bucket{
+							return &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -704,9 +730,9 @@ func TestService_handlePatchBucket(t *testing.T) {
 						}
 						return nil, fmt.Errorf("not found")
 					},
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							return &platform.Bucket{
+							return &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -729,14 +755,14 @@ func TestService_handlePatchBucket(t *testing.T) {
 			fields: fields{
 				&mock.BucketService{
 					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
-						return nil, &platform.Error{
-							Code: platform.ENotFound,
+						return nil, &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
-						return nil, &platform.Error{
-							Code: platform.ENotFound,
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
+						return nil, &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
@@ -757,7 +783,7 @@ func TestService_handlePatchBucket(t *testing.T) {
 				&mock.BucketService{
 					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							return &platform.Bucket{
+							return &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -765,9 +791,9 @@ func TestService_handlePatchBucket(t *testing.T) {
 						}
 						return nil, fmt.Errorf("not found")
 					},
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							d := &platform.Bucket{
+							d := &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -823,9 +849,9 @@ func TestService_handlePatchBucket(t *testing.T) {
 			name: "update retention policy to 'nothing'",
 			fields: fields{
 				&mock.BucketService{
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							d := &platform.Bucket{
+							d := &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "b1",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -842,8 +868,8 @@ func TestService_handlePatchBucket(t *testing.T) {
 							return d, nil
 						}
 
-						return nil, &platform.Error{
-							Code: platform.ENotFound,
+						return nil, &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
@@ -884,15 +910,15 @@ func TestService_handlePatchBucket(t *testing.T) {
 			fields: fields{
 				&mock.BucketService{
 					FindBucketByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.Bucket, error) {
-						return &platform.Bucket{
+						return &influxdb.Bucket{
 							ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 							Name:  "hello",
 							OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
 						}, nil
 					},
-					UpdateBucketFn: func(ctx context.Context, id platform.ID, upd platform.BucketUpdate) (*platform.Bucket, error) {
+					UpdateBucketFn: func(ctx context.Context, id influxdb.ID, upd influxdb.BucketUpdate) (*influxdb.Bucket, error) {
 						if id == platformtesting.MustIDBase16("020f755c3c082000") {
-							d := &platform.Bucket{
+							d := &influxdb.Bucket{
 								ID:    platformtesting.MustIDBase16("020f755c3c082000"),
 								Name:  "hello",
 								OrgID: platformtesting.MustIDBase16("020f755c3c082000"),
@@ -909,8 +935,8 @@ func TestService_handlePatchBucket(t *testing.T) {
 							return d, nil
 						}
 
-						return nil, &platform.Error{
-							Code: platform.ENotFound,
+						return nil, &influxdb.Error{
+							Code: influxdb.ENotFound,
 							Msg:  "bucket not found",
 						}
 					},
@@ -934,7 +960,7 @@ func TestService_handlePatchBucket(t *testing.T) {
 			bucketBackend.BucketService = tt.fields.BucketService
 			h := NewBucketHandler(zaptest.NewLogger(t), bucketBackend)
 
-			upd := platform.BucketUpdate{}
+			upd := influxdb.BucketUpdate{}
 			if tt.args.name != "" {
 				upd.Name = &tt.args.name
 			}
@@ -987,11 +1013,11 @@ func TestService_handlePatchBucket(t *testing.T) {
 
 func TestService_handlePostBucketMember(t *testing.T) {
 	type fields struct {
-		UserService platform.UserService
+		UserService influxdb.UserService
 	}
 	type args struct {
 		bucketID string
-		user     *platform.User
+		user     *influxdb.User
 	}
 	type wants struct {
 		statusCode  int
@@ -1009,18 +1035,18 @@ func TestService_handlePostBucketMember(t *testing.T) {
 			name: "add a bucket member",
 			fields: fields{
 				UserService: &mock.UserService{
-					FindUserByIDFn: func(ctx context.Context, id platform.ID) (*platform.User, error) {
-						return &platform.User{
+					FindUserByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.User, error) {
+						return &influxdb.User{
 							ID:     id,
 							Name:   "name",
-							Status: platform.Active,
+							Status: influxdb.Active,
 						}, nil
 					},
 				},
 			},
 			args: args{
 				bucketID: "020f755c3c082000",
-				user: &platform.User{
+				user: &influxdb.User{
 					ID: platformtesting.MustIDBase16("6f626f7274697320"),
 				},
 			},
@@ -1081,11 +1107,11 @@ func TestService_handlePostBucketMember(t *testing.T) {
 
 func TestService_handlePostBucketOwner(t *testing.T) {
 	type fields struct {
-		UserService platform.UserService
+		UserService influxdb.UserService
 	}
 	type args struct {
 		bucketID string
-		user     *platform.User
+		user     *influxdb.User
 	}
 	type wants struct {
 		statusCode  int
@@ -1103,18 +1129,18 @@ func TestService_handlePostBucketOwner(t *testing.T) {
 			name: "add a bucket owner",
 			fields: fields{
 				UserService: &mock.UserService{
-					FindUserByIDFn: func(ctx context.Context, id platform.ID) (*platform.User, error) {
-						return &platform.User{
+					FindUserByIDFn: func(ctx context.Context, id influxdb.ID) (*influxdb.User, error) {
+						return &influxdb.User{
 							ID:     id,
 							Name:   "name",
-							Status: platform.Active,
+							Status: influxdb.Active,
 						}, nil
 					},
 				},
 			},
 			args: args{
 				bucketID: "020f755c3c082000",
-				user: &platform.User{
+				user: &influxdb.User{
 					ID: platformtesting.MustIDBase16("6f626f7274697320"),
 				},
 			},
@@ -1173,18 +1199,16 @@ func TestService_handlePostBucketOwner(t *testing.T) {
 	}
 }
 
-func initBucketService(f platformtesting.BucketFields, t *testing.T) (platform.BucketService, string, func()) {
-	svc := kv.NewService(zaptest.NewLogger(t), inmem.NewKVStore())
+func initBucketService(f platformtesting.BucketFields, t *testing.T) (influxdb.BucketService, string, func()) {
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t)
+	store := NewTestInmemStore(t)
+	svc := kv.NewService(logger, store)
 	svc.IDGenerator = f.IDGenerator
 	svc.OrgBucketIDs = f.OrgBucketIDs
 	svc.TimeGenerator = f.TimeGenerator
 	if f.TimeGenerator == nil {
-		svc.TimeGenerator = platform.RealTimeGenerator{}
-	}
-
-	ctx := context.Background()
-	if err := svc.Initialize(ctx); err != nil {
-		t.Fatal(err)
+		svc.TimeGenerator = influxdb.RealTimeGenerator{}
 	}
 
 	for _, o := range f.Organizations {

@@ -1,4 +1,5 @@
 // APIs
+import {normalize} from 'normalizr'
 import {queryBuilderFetcher} from 'src/timeMachine/apis/QueryBuilderFetcher'
 import * as api from 'src/client'
 import {get} from 'lodash'
@@ -8,14 +9,17 @@ import {fetchDemoDataBuckets} from 'src/cloud/apis/demodata'
 import {getActiveQuery, getActiveTimeMachine} from 'src/timeMachine/selectors'
 import {getTimeRangeWithTimezone} from 'src/dashboards/selectors'
 import {event} from 'src/cloud/utils/reporting'
+import {setBuckets} from 'src/buckets/actions/creators'
+import {Action as BucketAction} from 'src/buckets/actions/creators'
 
 // Types
 import {
+  Bucket,
+  BucketEntities,
   BuilderAggregateFunctionType,
   GetState,
   RemoteDataState,
   ResourceType,
-  Bucket,
 } from 'src/types'
 import {Dispatch} from 'react'
 import {BuilderFunctionsType} from '@influxdata/influx'
@@ -27,9 +31,16 @@ import {
 // Selectors
 import {getOrg} from 'src/organizations/selectors'
 import {getAll} from 'src/resources/selectors'
+import {getStatus} from 'src/resources/selectors'
+
+//Actions
+import {editActiveQueryWithBuilderSync} from 'src/timeMachine/actions'
 
 // Constants
 import {LIMIT} from 'src/resources/constants'
+
+// Schemas
+import {arrayOfBuckets} from 'src/schemas'
 
 export type Action =
   | ReturnType<typeof setBuilderAggregateFunctionType>
@@ -148,12 +159,16 @@ export const selectAggregateWindow = (period: string) => (
 }
 
 export const loadBuckets = () => async (
-  dispatch: Dispatch<Action | ReturnType<typeof selectBucket>>,
+  dispatch: Dispatch<Action | ReturnType<typeof selectBucket> | BucketAction>,
   getState: GetState
 ) => {
+  if (
+    getStatus(getState(), ResourceType.Buckets) === RemoteDataState.NotStarted
+  ) {
+    dispatch(setBuckets(RemoteDataState.Loading))
+  }
   const startTime = Date.now()
   const orgID = getOrg(getState()).id
-
   dispatch(setBuilderBucketsStatus(RemoteDataState.Loading))
 
   try {
@@ -164,6 +179,13 @@ export const loadBuckets = () => async (
     }
 
     const demoDataBuckets = await fetchDemoDataBuckets()
+
+    const normalizedBuckets = normalize<Bucket, BucketEntities, string[]>(
+      [...resp.data.buckets, ...demoDataBuckets],
+      arrayOfBuckets
+    )
+
+    dispatch(setBuckets(RemoteDataState.Done, normalizedBuckets))
 
     const allBuckets = [...resp.data.buckets, ...demoDataBuckets].map(
       b => b.name
@@ -452,11 +474,14 @@ export const reloadTagSelectors = () => (dispatch: Dispatch<Action>) => {
 }
 
 export const setBuilderBucketIfExists = (bucketName: string) => (
-  dispatch: Dispatch<Action>,
+  dispatch: Dispatch<
+    Action | ReturnType<typeof editActiveQueryWithBuilderSync>
+  >,
   getState: GetState
 ) => {
   const buckets = getAll<Bucket>(getState(), ResourceType.Buckets)
   if (buckets.find(b => b.name === bucketName)) {
+    dispatch(editActiveQueryWithBuilderSync())
     dispatch(setBuilderBucket(bucketName, true))
   }
 }

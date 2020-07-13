@@ -1,6 +1,6 @@
 // Libraries
 import React, {PureComponent} from 'react'
-import {connect} from 'react-redux'
+import {connect, ConnectedProps} from 'react-redux'
 import {capitalize} from 'lodash'
 
 // Components
@@ -29,6 +29,7 @@ import {
   setShadeBelow,
   setLinePosition,
   setTimeFormat,
+  SetHoverDimension,
 } from 'src/timeMachine/actions'
 
 // Utils
@@ -58,32 +59,12 @@ interface OwnProps {
   geom?: XYGeom
   colors: Color[]
   shadeBelow?: boolean
+  hoverDimension?: 'auto' | 'x' | 'y' | 'xy'
   position: LinePosition
 }
 
-interface StateProps {
-  xColumn: string
-  yColumn: string
-  numericColumns: string[]
-  timeFormat: string
-}
-
-interface DispatchProps {
-  onUpdateYAxisLabel: typeof setYAxisLabel
-  onUpdateAxisPrefix: typeof setAxisPrefix
-  onUpdateAxisSuffix: typeof setAxisSuffix
-  onUpdateYAxisBounds: typeof setYAxisBounds
-  onUpdateYAxisBase: typeof setYAxisBase
-  onUpdateColors: typeof setColors
-  onSetShadeBelow: typeof setShadeBelow
-  onSetXColumn: typeof setXColumn
-  onSetYColumn: typeof setYColumn
-  onSetGeom: typeof setGeom
-  onSetPosition: typeof setLinePosition
-  onSetTimeFormat: typeof setTimeFormat
-}
-
-type Props = OwnProps & DispatchProps & StateProps
+type ReduxProps = ConnectedProps<typeof connector>
+type Props = OwnProps & ReduxProps
 
 class LineOptions extends PureComponent<Props> {
   public render() {
@@ -110,6 +91,8 @@ class LineOptions extends PureComponent<Props> {
       numericColumns,
       onSetTimeFormat,
       timeFormat,
+      hoverDimension = 'auto',
+      onSetHoverDimension,
     } = this.props
 
     return (
@@ -148,6 +131,54 @@ class LineOptions extends PureComponent<Props> {
             checked={!!shadeBelow}
             onSetChecked={onSetShadeBelow}
           />
+        </Grid.Column>
+        <Grid.Column>
+          <br />
+          <Form.Element label="Hover Dimension">
+            <Dropdown
+              button={(active, onClick) => (
+                <Dropdown.Button active={active} onClick={onClick}>
+                  {hoverDimension}
+                </Dropdown.Button>
+              )}
+              menu={onCollapse => (
+                <Dropdown.Menu onCollapse={onCollapse}>
+                  <Dropdown.Item
+                    id="auto"
+                    value="auto"
+                    onClick={onSetHoverDimension}
+                    selected={hoverDimension === 'auto'}
+                  >
+                    Auto
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    id="x"
+                    value="x"
+                    onClick={onSetHoverDimension}
+                    selected={hoverDimension === 'x'}
+                  >
+                    X Axis
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    id="y"
+                    value="y"
+                    onClick={onSetHoverDimension}
+                    selected={hoverDimension === 'y'}
+                  >
+                    Y Axis
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    id="xy"
+                    value="xy"
+                    onClick={onSetHoverDimension}
+                    selected={hoverDimension === 'xy'}
+                  >
+                    X & Y Axis
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              )}
+            />
+          </Form.Element>
         </Grid.Column>
         <Grid.Column>
           <h5 className="view-options--header">Y Axis</h5>
@@ -232,7 +263,7 @@ const mstp = (state: AppState) => {
   return {xColumn, yColumn, numericColumns, timeFormat}
 }
 
-const mdtp: DispatchProps = {
+const mdtp = {
   onUpdateYAxisLabel: setYAxisLabel,
   onUpdateAxisPrefix: setAxisPrefix,
   onUpdateAxisSuffix: setAxisSuffix,
@@ -245,9 +276,9 @@ const mdtp: DispatchProps = {
   onSetGeom: setGeom,
   onSetPosition: setLinePosition,
   onSetTimeFormat: setTimeFormat,
+  onSetHoverDimension: SetHoverDimension,
 }
 
-export default connect<StateProps, DispatchProps, OwnProps>(
-  mstp,
-  mdtp
-)(LineOptions)
+const connector = connect(mstp, mdtp)
+
+export default connector(LineOptions)

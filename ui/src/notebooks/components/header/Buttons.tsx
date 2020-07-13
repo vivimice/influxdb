@@ -11,6 +11,7 @@ import TimeZoneDropdown from 'src/notebooks/components/header/TimeZoneDropdown'
 import TimeRangeDropdown from 'src/notebooks/components/header/TimeRangeDropdown'
 import AutoRefreshDropdown from 'src/notebooks/components/header/AutoRefreshDropdown'
 import Submit from 'src/notebooks/components/header/Submit'
+import {FeatureFlag} from 'src/shared/utils/featureFlag'
 
 export interface TimeContextProps {
   context: TimeBlock
@@ -27,7 +28,7 @@ const Buttons: FC = () => {
     (data: TimeBlock) => {
       updateTimeContext(id, data)
     },
-    [id]
+    [id, updateTimeContext]
   )
 
   if (!timeContext.hasOwnProperty(id)) {
@@ -38,8 +39,10 @@ const Buttons: FC = () => {
   return (
     <div className="notebook-header--buttons">
       <TimeZoneDropdown />
-      <TimeRangeDropdown context={timeContext[id]} update={update} />
-      <AutoRefreshDropdown context={timeContext[id]} update={update} />
+      <FeatureFlag name="notebook-panel--data-source" equals={false}>
+        <TimeRangeDropdown context={timeContext[id]} update={update} />
+        <AutoRefreshDropdown context={timeContext[id]} update={update} />
+      </FeatureFlag>
       <Submit />
     </div>
   )
