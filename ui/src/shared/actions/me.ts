@@ -19,8 +19,8 @@ export const getMe = () => async dispatch => {
   try {
     const user = await client.users.me()
 
-    updateReportingContext('userID', user.id)
-    updateReportingContext('userEmail', user.name)
+    updateReportingContext({userID: user.id})
+    updateReportingContext({userEmail: user.name})
 
     gaEvent('cloudAppUserDataReady', {
       identity: {
